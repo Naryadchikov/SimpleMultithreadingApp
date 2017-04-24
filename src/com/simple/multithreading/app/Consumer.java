@@ -14,7 +14,7 @@ public class Consumer implements Runnable {
     public void run() {
         for (int i = 0; i < 20; ++i) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(500 * (int)(Math.random() * 10));
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }

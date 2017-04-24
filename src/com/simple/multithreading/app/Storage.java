@@ -2,17 +2,29 @@ package com.simple.multithreading.app;
 
 public class Storage {
 
-    private int consumers;
+    private volatile int activeConsumers;
+    private volatile boolean isProducerWaiting;
     private String lastMessage;
 
     public Storage() {
         lastMessage = "EMPTY";
-        consumers = 0;
+        activeConsumers = 0;
+        isProducerWaiting = true;
     }
 
     public String read(int consumerID) {
         synchronized(this) {
-            consumers++;
+            if (isProducerWaiting) {
+                System.out.println("Consumer number " + consumerID + " is waiting.");
+                while (isProducerWaiting) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            activeConsumers++;
             System.out.println("Consumer number " + consumerID + " is reading.");
         }
 
@@ -23,9 +35,9 @@ public class Storage {
         }
 
         synchronized(this) {
-            consumers--;
+            activeConsumers--;
             System.out.println("Consumer number " + consumerID + " has just stopped reading.");
-            if (consumers == 0) {
+            if (activeConsumers == 0) {
                 notifyAll();
             }
         }
@@ -34,14 +46,15 @@ public class Storage {
     }
 
     public synchronized void write(String message) {
-        while (consumers != 0) {
+        isProducerWaiting = true;
+        System.out.println("Producer is waiting.");
+        while (activeConsumers != 0) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        System.out.println("Producer is waiting.");
 
         try {
             Thread.sleep(1000);
@@ -51,6 +64,7 @@ public class Storage {
 
         lastMessage = message;
         System.out.println("Producer has just stopped writing this: " + lastMessage);
+        isProducerWaiting = false;
         notifyAll();
     }
 }
