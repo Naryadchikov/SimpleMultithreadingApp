@@ -28,9 +28,9 @@ public class Storage {
             if (consumers == 0) {
                 notifyAll();
             }
-
-            return lastMessage;
         }
+
+        return lastMessage;
     }
 
     public synchronized void write(String message) {
