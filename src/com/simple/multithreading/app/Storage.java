@@ -50,14 +50,17 @@ public class Storage {
         }
     }
 
-    public synchronized void write(String message) {
+    public void write(String message) {
         isProducerWaiting = true;
         System.out.println("Producer is waiting.");
-        while (activeConsumers != 0) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+
+        synchronized (this) {
+            while (activeConsumers != 0) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -70,6 +73,9 @@ public class Storage {
         lastMessage = message;
         System.out.println("Producer has just stopped writing this: " + lastMessage);
         isProducerWaiting = false;
-        notifyAll();
+
+        synchronized (this) {
+            notifyAll();
+        }
     }
 }
