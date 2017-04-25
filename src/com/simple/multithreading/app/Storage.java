@@ -9,7 +9,7 @@ public class Storage {
     public Storage() {
         lastMessage = "EMPTY";
         activeConsumers = 0;
-        isProducerWaiting = true;
+        isProducerWaiting = false;
     }
 
     public String read(int consumerID) {
@@ -37,12 +37,17 @@ public class Storage {
         synchronized(this) {
             activeConsumers--;
             System.out.println("Consumer number " + consumerID + " has just stopped reading.");
-            if (activeConsumers == 0) {
-                notifyAll();
-            }
         }
 
-        return lastMessage;
+        try {
+            return lastMessage;
+        } finally {
+            synchronized (this) {
+                if (activeConsumers == 0) {
+                    notifyAll();
+                }
+            }
+        }
     }
 
     public synchronized void write(String message) {
